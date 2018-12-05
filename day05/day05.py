@@ -8,7 +8,7 @@ def collapse(data):
             result = [c]
         else:
             last = result[-1]
-            if c.islower() != last.islower() and c.lower() == last.lower():
+            if c != last and c.lower() == last.lower():
                 result.pop()
             else:
                 result.append(c)
