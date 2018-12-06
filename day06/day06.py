@@ -6,15 +6,27 @@ def read_lines():
         return f.readlines()
 
 
-class Main(object):
+class Base(object):
     def __init__(self, lines):
-        coords = [(int(x), int(y)) for x, y in (line.split(',') for line in lines)]
-        self.min_x = min(c[0] for c in coords) - 1
-        self.max_x = max(c[0] for c in coords) + 1
-        self.min_y = min(c[1] for c in coords) - 1
-        self.max_y = max(c[1] for c in coords) + 1
-        self.queue = deque((c, (idx, 0)) for idx, c in enumerate(coords))
+        self.coords = [(int(x), int(y)) for x, y in (line.split(',') for line in lines)]
+        self.min_x = min(c[0] for c in self.coords) - 1
+        self.max_x = max(c[0] for c in self.coords) + 1
+        self.min_y = min(c[1] for c in self.coords) - 1
+        self.max_y = max(c[1] for c in self.coords) + 1
         self.grid = {}
+
+    def print(self):
+        for y in range(self.min_y, self.max_y + 1):
+            line = ''
+            for x in range(self.min_x, self.max_x + 1):
+                line += ('%3s' % self.grid[(x, y)][0])
+            print(line)
+
+
+class Part1(Base):
+    def __init__(self, lines):
+        super().__init__(lines)
+        self.queue = deque((c, (idx, 0)) for idx, c in enumerate(self.coords))
         self.infinite_areas = set()
 
     def is_inside(self, x, y):
@@ -49,12 +61,28 @@ class Main(object):
         [(area, size)] = count.most_common(1)
         return (area, size)
 
-    def print(self):
+    def part1(self):
+        self.fill_grid()
+        return self.biggest_finite_area()
+
+
+class Part2(Base):
+    def __init__(self, lines, max_distance):
+        super().__init__(lines)
+        self.max_distance = max_distance
+
+    def total_distance(self, x, y):
+        return sum(abs(x - cx) for cx, _ in self.coords) + sum(abs(y - cy) for _, cy in self.coords)
+
+    def part2(self):
+        size = 0
         for y in range(self.min_y, self.max_y + 1):
-            line = ''
             for x in range(self.min_x, self.max_x + 1):
-                line += ('%3s' % self.grid[(x, y)][0])
-            print(line)
+                d = self.total_distance(x, y)
+                if d < self.max_distance:
+                    size += 1
+                self.grid[(x, y)] = ('#' if d < self.max_distance else '.', d)
+        return size
 
 
 TEST = [
@@ -67,9 +95,14 @@ TEST = [
 ]
 
 if __name__ == '__main__':
-    main = Main(read_lines())
-    # main = Main(TEST)
-    main.fill_grid()
-    (area, size) = main.biggest_finite_area()
-    # main.print()
-    print("Area %s has size %d" % (area, size))
+    part1 = Part1(read_lines())
+    # part1 = Part1(TEST)
+    (area, size) = part1.part1()
+    # part1.print()
+    print("Part 1: area %s has size %d" % (area, size))
+
+    part2 = Part2(read_lines(), 10000)
+    # part2 = Part2(TEST, 32)
+    size = part2.part2()
+    # part2.print()
+    print("Part 2: area has size %d" % size)
